@@ -1,7 +1,6 @@
 package com.aanchal.symptomapp.screens
 
 import android.content.Context
-import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -43,6 +42,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.aanchal.symptomapp.Doctor
 import com.aanchal.symptomapp.MainViewModel
 import com.aanchal.symptomapp.R
 
@@ -50,7 +50,8 @@ import com.aanchal.symptomapp.R
 fun AppointmentScreen(
     navController: NavHostController,
     applicationContext: Context,
-    viewModelmain: MainViewModel
+    viewModelmain: MainViewModel,
+    doctor: Doctor
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         // Background Image
@@ -65,10 +66,10 @@ fun AppointmentScreen(
 
         // Content Column
         Column(modifier = Modifier.fillMaxSize()) {
-            CenterAlignedTopAppBarExample()
-            profileDetails()
+            CenterAlignedTopAppBarExample(navController)
+            profileDetails(doctor)
             LazyColumn(modifier = Modifier.weight(1f)) {
-                item { AboutCard() }
+                item { AboutCard(doctor) }
                 item { DatePickerWithDateSelectableDatesSample() }
             }
         }
@@ -124,7 +125,7 @@ fun DatePickerWithDateSelectableDatesSample() {
 }
 
 @Composable
-fun AboutCard() {
+fun AboutCard(doctor: Doctor) {
     Card(
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFFF4FDFF),
@@ -133,28 +134,29 @@ fun AboutCard() {
             .fillMaxWidth()
             .padding(20.dp)
     ) {
+        val about="${doctor.name} is a ${doctor.specialist}, aged ${doctor.age}, available from ${doctor.timeSlot} on weekdays in ${doctor.city}, ${doctor.location}. Feel free to Contact at ${doctor.phone} or Email at ${doctor.email} for any queries."
+
         Text(text = "About", fontSize = 25.sp, color = Color.Black, modifier = Modifier.padding(6.dp))
-        Text(text = "Dr. Jenny WilsonDr. Jenny WilsonDr. Jenny WilsonDr. Jenny WilsonDr. Jenny WilsonDr. Jenny WilsonDr. Jenny WilsonDr. Jenny WilsonDr. Jenny WilsonDr. Jenny Wilson" +
-                "Dr. Jenny WilsonDr. Jenny WilsonDr. Jenny Wilson", fontSize = 15.sp, color = Color.Black, modifier = Modifier.padding(6.dp))
+        Text(text = about, fontSize = 15.sp, color = Color.Black, modifier = Modifier.padding(6.dp))
     }
 }
 @Composable
-fun profileDetails(){
+fun profileDetails(doctor: Doctor) {
     Row(modifier = Modifier
         .padding(20.dp)
         .fillMaxWidth()) {
         DocImageCard()
         Spacer(modifier = Modifier.padding(6.dp))
         Column() {
-            Text(text = "Dr. Jenny Wilson", fontSize = 25.sp, color = Color.White, modifier = Modifier)
-            Text(text = "Cardiologist Specialist", fontSize = 15.sp, color = Color.White, modifier = Modifier)
+            Text(text = "Dr. ${doctor.name}", fontSize = 25.sp, color = Color.White, modifier = Modifier)
+            Text(text = "${doctor.specialist}", fontSize = 15.sp, color = Color.White, modifier = Modifier)
             Spacer(modifier = Modifier.padding(6.dp))
             Row() {
                 Box(modifier = Modifier.background(Color(0xFF00B9E4))){
                     Icon(imageVector = Icons.Filled.Star, contentDescription = "Rating_Star", tint = Color.White)
                 }
                 Spacer(modifier = Modifier.padding(6.dp))
-                Text(text = "4.5 Star",color = Color.White)
+                Text(text = "${doctor.userRating} Star",color = Color.White)
             }
         }
     }
@@ -180,7 +182,7 @@ fun DocImageCard() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CenterAlignedTopAppBarExample() {
+fun CenterAlignedTopAppBarExample(navController: NavHostController) {
 
     CenterAlignedTopAppBar(
         modifier = Modifier.padding(top = 20.dp),
@@ -190,7 +192,7 @@ fun CenterAlignedTopAppBarExample() {
         title = {
         },
         navigationIcon = {
-            IconButton(onClick = { /* do something */ }) {
+            IconButton(onClick = { navController.popBackStack() }) {
                 Icon(
                     imageVector = Icons.Filled.ArrowBack,
                     contentDescription = "backbutton",

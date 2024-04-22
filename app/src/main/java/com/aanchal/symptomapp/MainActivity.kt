@@ -21,6 +21,7 @@ import com.aanchal.symptomapp.screens.SearchScreen
 class MainActivity  : ComponentActivity() {
    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+       val doctors = DataManager.loadDoctorsFromJson(this)
        installSplashScreen()
         setContent {
             SymptomAppTheme {
@@ -36,11 +37,15 @@ class MainActivity  : ComponentActivity() {
                                 SearchScreen(navController,applicationContext,viewModelmain)
                             }
                             composable("doctorList"){
-                                DoctorListScreen(navController,applicationContext,viewModelmain)
+                                DoctorListScreen(navController,applicationContext,viewModelmain,doctors)
                             }
-                            composable("appointmentScreen"){
-                                AppointmentScreen(navController,applicationContext,viewModelmain)
+                            composable("doctor_details/{doctorId}") {
+                                    backStackEntry ->
+                                val doctorId = backStackEntry.arguments?.getString("doctorId")?.toIntOrNull() ?: -1
+                                val doctor = doctors.find { it.doctorId == doctorId } ?: Doctor(0, "", "", 0.0, "", 0, "", "", "", "", "")
+                                AppointmentScreen(navController,applicationContext,viewModelmain,doctor)
                             }
+
                     }
                 }
             }

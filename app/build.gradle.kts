@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
+    kotlin("plugin.serialization") version "1.6.0"
 }
 
 android {
@@ -84,4 +85,8 @@ dependencies {
     annotationProcessor (libs.hilt.android.compiler)
     annotationProcessor ("androidx.hilt:hilt-compiler:1.2.0")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0")
+    //Generative dependency
+    implementation("com.google.ai.client.generativeai:generativeai:0.1.2")
 }

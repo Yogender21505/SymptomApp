@@ -10,12 +10,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.aanchal.symptomapp.presentation.Dimens.MediumPadding1
 import com.aanchal.symptomapp.presentation.Dimens.MediumPadding2
@@ -28,7 +32,11 @@ fun OnBoardingPage(
     page: Page
 )
 {
-    Column() {
+    val textColor = MaterialTheme.colors.onBackground
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Image(
             modifier= Modifier
                 .fillMaxWidth()
@@ -37,14 +45,23 @@ fun OnBoardingPage(
             contentDescription = null
         )
         Spacer(modifier = Modifier.height(MediumPadding1))
-        Text(text = page.title,
+        Text(
+            text = page.title,
             modifier= Modifier.padding(horizontal = MediumPadding2),
-            color = Color.Black)
-        Text(text = page.description,
+            color = textColor, // Use textColor instead of hardcoding Color.Black
+            fontWeight = FontWeight.ExtraBold,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text = page.description,
             modifier= Modifier.padding(horizontal = MediumPadding2),
-            color = Color.Black)
+            color = textColor, // Use textColor instead of hardcoding Color.Black
+            textAlign = TextAlign.Center
+        )
     }
 }
+
+
 //
 //@Preview(showBackground = true)
 //@Preview(uiMode = UI_MODE_NIGHT_YES,showBackground = true)

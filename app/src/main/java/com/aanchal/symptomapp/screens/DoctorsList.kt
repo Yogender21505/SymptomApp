@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -36,6 +37,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.aanchal.symptomapp.Doctor
 import com.aanchal.symptomapp.MainViewModel
 import com.aanchal.symptomapp.R
 
@@ -43,46 +45,49 @@ import com.aanchal.symptomapp.R
 fun DoctorListScreen(
     navController: NavHostController,
     applicationContext: Context,
-    viewModelmain: MainViewModel
+    viewModelmain: MainViewModel,
+    doctors: List<Doctor>
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-
+        val sortedDoctors = doctors
+            .filter { it.specialist == "Psychiatrist" } // Change "Psychiatrist" to input string
+            .sortedByDescending { it.userRating }
+        Text(text = "Psychiatrist")
         Column(modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally) {
-            DoctorNav()
+            DoctorNav(navController)
+            Text(text = "Psychiatrist")
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                item { profileDetailsList() }
-                item { profileDetailsList() }
-                item { profileDetailsList() }
-                item { profileDetailsList() }
-                item { profileDetailsList() }
-                item { profileDetailsList() }
-                item { profileDetailsList() }
-                item { profileDetailsList() }
+                items(sortedDoctors) { doctor ->
+                    profileDetailsList(doctor,navController)
+                }
             }
         }
     }
 }
 @Composable
-fun profileDetailsList(){
+fun profileDetailsList(doctor: Doctor, navController: NavHostController) {
+
     Row(modifier = Modifier
         .padding(20.dp)
         .fillMaxWidth()) {
         DocimageList()
         Spacer(modifier = Modifier.padding(6.dp))
         Column() {
-            Text(text = "Dr. Jenny Wilson", fontSize = 25.sp, color = Color.Black, modifier = Modifier)
-            Text(text = "Cardiologist Specialist", fontSize = 15.sp, color = Color.Black, modifier = Modifier)
+            Text(text = "Dr. ${doctor.name}", fontSize = 25.sp, color = Color.Black, modifier = Modifier)
+            Text(text = "${doctor.specialist}", fontSize = 15.sp, color = Color.Black, modifier = Modifier)
             Spacer(modifier = Modifier.padding(6.dp))
             Row() {
                 Box(modifier = Modifier.background(Color(0xFF00B9E4))){
                     Icon(imageVector = Icons.Filled.Star, contentDescription = "Rating_Star", tint = Color.White)
                 }
                 Spacer(modifier = Modifier.padding(6.dp))
-                Text(text = "4.5 Star",color = Color.Black)
+                Text(text = "${doctor.userRating}",color = Color.Black)
             }
         }
-        Icon(modifier = Modifier.align(Alignment.CenterVertically),imageVector = Icons.Filled.KeyboardArrowRight, contentDescription = "movetodoctor")
+            IconButton(onClick = { navController.navigate("doctor_details/${doctor.doctorId}")}){
+                Icon(modifier = Modifier.align(Alignment.CenterVertically),imageVector = Icons.Filled.KeyboardArrowRight, contentDescription = "movetodoctor")
+            }
     }
 }
 @Composable
@@ -106,15 +111,14 @@ fun DocimageList() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DoctorNav() {
+fun DoctorNav(navController: NavHostController) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     CenterAlignedTopAppBar(
         title = {
-            Text(text = "Psychologist")
         },
         navigationIcon = {
-            IconButton(onClick = { /* do something */ }) {
+            IconButton(onClick = { navController.popBackStack()}) {
                 Icon(
                     imageVector = Icons.Filled.ArrowBack,
                     contentDescription = "menu"

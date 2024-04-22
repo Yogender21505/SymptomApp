@@ -11,18 +11,18 @@ data class Page(
 
 val pages = listOf(
     Page(
-        title = "Page 1 hello ",
-        description = "it is the pageit is the pageit is the page",
+        title = "AI-powered care ",
+        description = "AI is ere to analyze your symptoms and provide you with insights.",
         image = R.drawable.first
     ),
     Page(
-    title = "Page 1 hello ",
-        description = "it is the pageit is the pageit is the page",
+    title = "Get Diagnoise ",
+        description = "Write your mock symptoms",
         image = R.drawable.second
     ),
     Page(
-    title = "Page 1 hello ",
-    description = "it is the pageit is the pageit is the page",
+    title = "Make Appointment with Specialist ",
+    description = "Know disease and meet specialist",
     image = R.drawable.third
     )
 )

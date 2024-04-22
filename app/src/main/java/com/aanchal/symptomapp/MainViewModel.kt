@@ -12,10 +12,9 @@ import kotlinx.coroutines.launch
 
 class MainViewModel(): ViewModel() {
     var startdestination = mutableStateOf("onBoarding")
-    fun changedestination(desti: String){
-        viewModelScope.launch {
-            startdestination.value= desti
-
-        }
-    }
+//    fun changedestination(desti: String){
+//        viewModelScope.launch {
+//            startdestination.value= desti
+//        }
+//    }
 }
