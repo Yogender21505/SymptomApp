@@ -1,19 +1,27 @@
 package com.aanchal.symptomapp.screens
 
 
+import android.annotation.SuppressLint
 import android.content.Context
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -22,6 +30,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,65 +38,190 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.aanchal.symptomapp.Doctor
 import com.aanchal.symptomapp.MainViewModel
 import com.aanchal.symptomapp.R
+import com.aanchal.symptomapp.geminidatamanager.ChatState
+import com.aanchal.symptomapp.geminidatamanager.ChatViewModel
 
 @Composable
 fun DoctorListScreen(
     navController: NavHostController,
     applicationContext: Context,
     viewModelmain: MainViewModel,
-    doctors: List<Doctor>
+    doctors: List<Doctor>,
+    chatState: ChatState,
+    chatViewModel: ChatViewModel
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-        val sortedDoctors = doctors
-            .filter { it.specialist == "Psychiatrist" } // Change "Psychiatrist" to input string
-            .sortedByDescending { it.userRating }
-        Text(text = "Psychiatrist")
-        Column(modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally) {
-            DoctorNav(navController)
-            Text(text = "Psychiatrist")
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(sortedDoctors) { doctor ->
-                    profileDetailsList(doctor,navController)
+        if (chatViewModel.isLoading.value == false) {
+            // Get the categories from the response message
+            val categories = chatViewModel.responseMessage.value.split(", ")
+            if (categories.isNotEmpty()) {
+                println(categories[0])
+                val selectedCategory = remember { mutableStateOf(categories.getOrElse(0) { "" }) }
+                Column(modifier = Modifier.fillMaxSize()) {
+                    DoctorNav(navController)
+                    // Display CategoryItemsScreen if no category is selected
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp)
+                    ) {
+                        Column(modifier = Modifier) {
+                            Text(
+                                text = "Specialist",
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 15.sp,
+                                modifier = Modifier.padding(start = 16.dp)
+                            )
+                            Spacer(modifier = Modifier.padding(6.dp))
+                            CategoryItemsScreen(
+                                categories = categories,
+                                selectedCategory = selectedCategory
+                            )
+                        }
+                    }
+                    // Filter doctors based on the selected category
+                    LaunchedEffect(selectedCategory.value) {
+                        val sortedDoctors = doctors
+                            .filter { it.specialist == selectedCategory.value }
+                            .sortedByDescending { it.userRating }
+
+                        // Update the UI with the filtered doctors
+                        viewModelmain.updateDoctorList(sortedDoctors)
+                    }
+
+                    // Display the list of doctors for the selected category
+                    val filteredDoctors = viewModelmain.filteredDoctors
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Text(
+                            text = "Top Rated Doctors",
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 15.sp,
+                            modifier = Modifier.padding(start = 16.dp)
+                        )
+                        Spacer(modifier = Modifier.padding(6.dp))
+                        // DoctorNav(navController) // Consider uncommenting if you have navigation
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            items(filteredDoctors.value) { doctor ->
+                                profileDetailsList(doctor, navController)
+                            }
+                        }
+                    }
+                }
+            } else {
+                navController.popBackStack()
+            }
+        } else {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .size(24.dp),
+                    color = Color.Blue
+                )
+            }
+        }
+    }
+}
+
+
+
+@Composable
+fun CategoryItemsScreen(
+    categories: List<String>,
+    selectedCategory: MutableState<String>
+) {
+    LazyColumn {
+        item {
+            LazyRow {
+                items(categories) { category ->
+                    CategoryItem(
+                        title = category,
+                        selected = category == selectedCategory.value,
+                        onItemClick = { selectedCategory.value = category }
+                    )
                 }
             }
         }
     }
 }
+
+@SuppressLint("UnrememberedMutableInteractionSource")
+@Composable
+fun CategoryItem(
+    title: String,
+    selected: Boolean,
+    onItemClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .padding(top = 8.dp, bottom = 8.dp, start = 8.dp)
+            .clickable(onClick = onItemClick),
+        border = BorderStroke(1.dp, if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected) Color(0xFF00B9E4).copy(alpha = 0.5f) else MaterialTheme.colorScheme.surface,
+            contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+        )
+    ) {
+        Row(horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(8.dp))
+        {
+            Spacer(modifier = Modifier.size(8.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun profileDetailsList(doctor: Doctor, navController: NavHostController) {
 
-    Row(modifier = Modifier
-        .padding(20.dp)
-        .fillMaxWidth()) {
-        DocimageList()
-        Spacer(modifier = Modifier.padding(6.dp))
-        Column() {
-            Text(text = "Dr. ${doctor.name}", fontSize = 25.sp, color = Color.Black, modifier = Modifier)
-            Text(text = "${doctor.specialist}", fontSize = 15.sp, color = Color.Black, modifier = Modifier)
+    Card(modifier = Modifier
+        .padding(8.dp)
+        .fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        ),
+        onClick = {navController.navigate("doctor_details/${doctor.doctorId}")}) {
+        Row(modifier = Modifier.padding(6.dp)){
+            DocimageList()
             Spacer(modifier = Modifier.padding(6.dp))
-            Row() {
-                Box(modifier = Modifier.background(Color(0xFF00B9E4))){
-                    Icon(imageVector = Icons.Filled.Star, contentDescription = "Rating_Star", tint = Color.White)
-                }
+            Column() {
+                Text(text = "Dr. ${doctor.name}", fontSize = 22.sp, color = Color.Black, modifier = Modifier)
+                Text(text = "${doctor.specialist}", fontSize = 15.sp, color = Color.Black, modifier = Modifier)
                 Spacer(modifier = Modifier.padding(6.dp))
-                Text(text = "${doctor.userRating}",color = Color.Black)
+                Row() {
+                    Box(modifier = Modifier.background(Color(0xFF00B9E4))){
+                        Icon(imageVector = Icons.Filled.Star, contentDescription = "Rating_Star", tint = Color.White)
+                    }
+                    Spacer(modifier = Modifier.padding(6.dp))
+                    Text(text = "${doctor.userRating}",color = Color.Black)
+                }
             }
         }
-            IconButton(onClick = { navController.navigate("doctor_details/${doctor.doctorId}")}){
-                Icon(modifier = Modifier.align(Alignment.CenterVertically),imageVector = Icons.Filled.KeyboardArrowRight, contentDescription = "movetodoctor")
-            }
     }
 }
 @Composable
@@ -97,7 +231,8 @@ fun DocimageList() {
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ),
         modifier = Modifier
-            .size(width = 100.dp, height = 150.dp)
+            .size(60.dp),
+        shape = CircleShape
     ) {
         Image(
             modifier = Modifier

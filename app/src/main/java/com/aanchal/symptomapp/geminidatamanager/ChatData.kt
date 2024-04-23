@@ -9,7 +9,11 @@ import kotlinx.coroutines.withContext
 object ChatData {
     val api_key = "AIzaSyD8WHRNLXvLeqzB1Ajg65aEjYgfR7hxafg"
 
-    suspend fun getResponse(prompt: String, _isLoading: MutableState<Boolean>): Chat{
+    suspend fun getResponse(
+        prompt: String,
+        _isLoading: MutableState<Boolean>,
+        responseMessage: MutableState<String>
+    ): Chat{
         val generativeModel = GenerativeModel(
             modelName = "gemini-pro", apiKey = api_key
         )
@@ -19,10 +23,12 @@ object ChatData {
             }
 
             val generatedContent = response.text // Assuming there's a method getContent()
-            println(generatedContent)
+//            println(generatedContent)
+            responseMessage.value=generatedContent.toString()
             if(response.text.toString().isNotEmpty()){
                 _isLoading.value=false
             }
+
             return Chat(
                 prompt = generatedContent.toString(),
                 isFromUser = false

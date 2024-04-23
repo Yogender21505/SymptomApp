@@ -1,8 +1,11 @@
 package com.aanchal.symptomapp.screens
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,49 +13,68 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFloatingActionButton
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.aanchal.symptomapp.Doctor
 import com.aanchal.symptomapp.MainViewModel
 import com.aanchal.symptomapp.R
+import com.aanchal.symptomapp.appointmentdata.AppointmentDataViewModel
+import java.text.ParseException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
+@SuppressLint("UnrememberedMutableState")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppointmentScreen(
     navController: NavHostController,
     applicationContext: Context,
     viewModelmain: MainViewModel,
-    doctor: Doctor
+    doctor: Doctor,
+    appointmentDataViewModel: AppointmentDataViewModel
 ) {
+    val selectedDate = appointmentDataViewModel.doctdate.value
+    val context = LocalContext.current
+
     Box(modifier = Modifier.fillMaxSize()) {
         // Background Image
         Image(
@@ -70,7 +92,7 @@ fun AppointmentScreen(
             profileDetails(doctor)
             LazyColumn(modifier = Modifier.weight(1f)) {
                 item { AboutCard(doctor) }
-                item { DatePickerWithDateSelectableDatesSample() }
+                item { DatePickerWithDateSelectableDatesSample(appointmentDataViewModel) }
             }
         }
 
@@ -80,48 +102,99 @@ fun AppointmentScreen(
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 16.dp) // Adjust bottom padding as needed
         ) {
-            BookAppointButton() {}
+            BookAppointButton(navController = navController, context = context, selectedDate = selectedDate,appointmentDataViewModel)
         }
+
     }
 }
+
+
 @Composable
-fun BookAppointButton(onClick: () -> Unit) {
+fun BookAppointButton(
+    navController: NavHostController,
+    context: Context,
+    selectedDate: String,
+    appointmentDataViewModel: AppointmentDataViewModel
+) {
     LargeFloatingActionButton(
-        onClick = { onClick() },
+        onClick = { validateAndNavigate(navController, selectedDate, context,appointmentDataViewModel) },
         shape = RectangleShape,
         modifier = Modifier
             .fillMaxWidth()
+            .height(80.dp)
             .padding(start = 20.dp, end = 20.dp)
-            .clip(
-                RoundedCornerShape(20.dp)
-            ),
+            .clip(RoundedCornerShape(20.dp)),
         containerColor = Color(0xFF04132D),
         content = {
-            Row{
-                Text(text = "Book An Appointment",color = Color.White)
-                Icon(imageVector = Icons.Filled.KeyboardArrowRight, contentDescription = "rightArrow",tint = Color.White)
+            Row {
+                Text(text = "Book An Appointment", color = Color.White)
+                androidx.compose.material.Icon(
+                    imageVector = Icons.Filled.KeyboardArrowRight,
+                    contentDescription = "rightArrow",
+                    tint = Color.White
+                )
             }
         }
     )
 }
+
+fun validateAndNavigate(
+    navController: NavHostController,
+    selectedDate: String,
+    context: Context,
+    appointmentDataViewModel: AppointmentDataViewModel
+) {
+    // Print the selected date to debug
+//    println("Selected date: ${appointmentDataViewModel.doctdate.value}")
+
+    val dateFormatPattern = "dd-MM-yyyy"
+    val dateFormat = SimpleDateFormat(dateFormatPattern, Locale.getDefault())
+    dateFormat.isLenient = false
+
+    try {
+        val parsedDate = dateFormat.parse(selectedDate)
+        val currentDate = Date()
+
+        if (parsedDate != null && parsedDate.after(currentDate)) {
+            appointmentDataViewModel.updateDate(selectedDate)
+            navController.navigate("successfullPage")
+        } else {
+            Toast.makeText(context, "Please select a future date", Toast.LENGTH_SHORT).show()
+        }
+    } catch (e: ParseException) {
+        Toast.makeText(context, "Invalid date format", Toast.LENGTH_SHORT).show()
+    }
+}
+
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DatePickerWithDateSelectableDatesSample() {
+fun DatePickerWithDateSelectableDatesSample(appointmentDataViewModel: AppointmentDataViewModel) {
     val datePickerState = rememberDatePickerState()
-
 
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            containerColor = androidx.compose.material.MaterialTheme.colors.surface,
         ),
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 40.dp, end = 20.dp, start = 20.dp)
     ) {
         DatePicker(state = datePickerState)
-        //Text("Selected date timestamp: ${datePickerState.selectedDateMillis ?: "no selection"}")
+        if(datePickerState.selectedDateMillis!=null){
+            appointmentDataViewModel.updateDate(Tools.convertLongToTime(datePickerState.selectedDateMillis!!))
+        }
     }
-
+}
+class Tools {
+    companion object {
+        fun convertLongToTime(time: Long): String {
+            val date = Date(time)
+            val format = android.icu.text.SimpleDateFormat("dd-MM-yyyy")
+            return format.format(date)
+        }
+    }
 }
 
 @Composable
@@ -134,12 +207,19 @@ fun AboutCard(doctor: Doctor) {
             .fillMaxWidth()
             .padding(20.dp)
     ) {
-        val about="${doctor.name} is a ${doctor.specialist}, aged ${doctor.age}, available from ${doctor.timeSlot} on weekdays in ${doctor.city}, ${doctor.location}. Feel free to Contact at ${doctor.phone} or Email at ${doctor.email} for any queries."
+        val about =
+            "${doctor.name} is a ${doctor.specialist}, aged ${doctor.age}, available from ${doctor.timeSlot} on weekdays in ${doctor.city}, ${doctor.location}. Feel free to Contact at ${doctor.phone} or Email at ${doctor.email} for any queries."
 
-        Text(text = "About", fontSize = 25.sp, color = Color.Black, modifier = Modifier.padding(6.dp))
+        Text(
+            text = "About",
+            fontSize = 25.sp,
+            color = Color.Black,
+            modifier = Modifier.padding(6.dp)
+        )
         Text(text = about, fontSize = 15.sp, color = Color.Black, modifier = Modifier.padding(6.dp))
     }
 }
+
 @Composable
 fun profileDetails(doctor: Doctor) {
     Row(modifier = Modifier
@@ -153,7 +233,11 @@ fun profileDetails(doctor: Doctor) {
             Spacer(modifier = Modifier.padding(6.dp))
             Row() {
                 Box(modifier = Modifier.background(Color(0xFF00B9E4))){
-                    Icon(imageVector = Icons.Filled.Star, contentDescription = "Rating_Star", tint = Color.White)
+                    androidx.compose.material.Icon(
+                        imageVector = Icons.Filled.Star,
+                        contentDescription = "Rating_Star",
+                        tint = Color.White
+                    )
                 }
                 Spacer(modifier = Modifier.padding(6.dp))
                 Text(text = "${doctor.userRating} Star",color = Color.White)
@@ -161,14 +245,16 @@ fun profileDetails(doctor: Doctor) {
         }
     }
 }
+
 @Composable
 fun DocImageCard() {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            containerColor = androidx.compose.material.MaterialTheme.colors.surface,
         ),
         modifier = Modifier
-            .size(width = 150.dp, height = 170.dp)
+            .size(120.dp),
+        shape = CircleShape
     ) {
         Image(
             modifier = Modifier
@@ -192,8 +278,8 @@ fun CenterAlignedTopAppBarExample(navController: NavHostController) {
         title = {
         },
         navigationIcon = {
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(
+            androidx.compose.material.IconButton(onClick = { navController.popBackStack() }) {
+                androidx.compose.material.Icon(
                     imageVector = Icons.Filled.ArrowBack,
                     contentDescription = "backbutton",
                     tint = Color.White
@@ -201,8 +287,8 @@ fun CenterAlignedTopAppBarExample(navController: NavHostController) {
             }
         },
         actions = {
-            IconButton(onClick = { /* do something */ }) {
-                Icon(
+            androidx.compose.material.IconButton(onClick = { /* do something */ }) {
+                androidx.compose.material.Icon(
                     imageVector = Icons.Filled.Email,
                     contentDescription = "Calling",
                     tint = Color.White

@@ -11,10 +11,17 @@ import kotlinx.coroutines.launch
 
 
 class MainViewModel(): ViewModel() {
-    var startdestination = mutableStateOf("onBoarding")
-//    fun changedestination(desti: String){
-//        viewModelScope.launch {
-//            startdestination.value= desti
-//        }
-//    }
+//    private val _doctors = mutableStateOf<List<Doctor>>(emptyList())
+//    val doctors: State<List<Doctor>> = _doctors
+    private val _filteredDoctors = mutableStateOf<List<Doctor>>(emptyList())
+    val filteredDoctors: State<List<Doctor>> = _filteredDoctors
+    private val _isloading = mutableStateOf<Boolean>(false)
+    val isloading: State<Boolean> = _isloading
+    // Function to update the list of doctors
+    fun updateDoctorList(newDoctors: List<Doctor>) {
+        _filteredDoctors.value = newDoctors
+    }
+    fun updateisloadin(loading: Boolean){
+        _isloading.value=loading
+    }
 }

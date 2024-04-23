@@ -1,8 +1,10 @@
 package com.aanchal.symptomapp.geminidatamanager
 
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aanchal.symptomapp.Doctor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -12,6 +14,8 @@ class ChatViewModel : ViewModel(){
     private val _chatState = MutableStateFlow(ChatState())
     val chatState = _chatState.asStateFlow()
     val isLoading = mutableStateOf(false)
+    val responseMessage = mutableStateOf("")
+
     fun onEvent(event: ChatUIEvent){
         when(event){
             is ChatUIEvent.SendPrompt->{
@@ -41,7 +45,7 @@ class ChatViewModel : ViewModel(){
     }
     private fun getResponse(prompt: String){
         viewModelScope.launch {
-            val chat = ChatData.getResponse(prompt,isLoading)
+            val chat = ChatData.getResponse(prompt,isLoading,responseMessage)
             _chatState.update{
                 it.copy(
                     chatList = it.chatList.toMutableList().apply{

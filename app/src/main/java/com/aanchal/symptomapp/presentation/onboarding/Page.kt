@@ -12,7 +12,7 @@ data class Page(
 val pages = listOf(
     Page(
         title = "AI-powered care ",
-        description = "AI is ere to analyze your symptoms and provide you with insights.",
+        description = "AI is here to analyze your symptoms and provide you with insights.",
         image = R.drawable.first
     ),
     Page(

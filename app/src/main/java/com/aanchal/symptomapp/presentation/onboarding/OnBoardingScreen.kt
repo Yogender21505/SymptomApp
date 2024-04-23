@@ -75,7 +75,7 @@ fun OnBoardingScreen(navController: NavHostController, viewModelmain: MainViewMo
                     scope.launch {
                         if(pagerState.currentPage==2){
                             //navigate to home screen
-                            navController.navigate("searchScreen")
+                            navController.navigate("guestLogin")
 //                            viewModelmain.changedestination("searchScreen")
                         }
                         else{

@@ -4,23 +4,17 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -35,50 +29,49 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.aanchal.symptomapp.MainViewModel
 import com.aanchal.symptomapp.geminidatamanager.ChatState
 import com.aanchal.symptomapp.geminidatamanager.ChatUIEvent
 import com.aanchal.symptomapp.geminidatamanager.ChatViewModel
+import com.aanchal.symptomapp.userdata.UserViewModel
+import kotlinx.coroutines.delay
 
 @Composable
 fun SearchScreen(
     navController: NavHostController,
     applicationContext: Context,
-    viewModelmain: MainViewModel
+    viewModelmain: MainViewModel,
+    chatState: ChatState,
+    chatViewModel: ChatViewModel,
+    userViewModel: UserViewModel
 ) {
-    val chatViewModel =viewModel<ChatViewModel>()
-    val chatState = chatViewModel.chatState.collectAsState().value
+
     Box(modifier = Modifier.fillMaxSize()) {
 
         Column(modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally) {
-            ProfileWithMenu()
+//            ProfileWithMenu()
             Column(modifier = Modifier.weight(1f)) { // Allow this column to take up remaining space
-                Text(text = "Hello, Good Afternoon",modifier = Modifier.padding(20.dp))
-                Text(text = "Aanchal Gupta",fontSize = 20.sp,modifier = Modifier.padding(20.dp),style = LocalTextStyle.current)
+                Text(text = "Hello,",modifier = Modifier.padding(6.dp),fontSize = 15.sp)
+                Text(text = "${userViewModel.userName.value}",fontSize = 25.sp,modifier = Modifier.padding(10.dp),style = LocalTextStyle.current, fontWeight = FontWeight.ExtraBold)
+
                 SearchBarCard(chatViewModel,chatState){
 
                         navController.navigate("doctorList")
-
                 }
                 Spacer(modifier = Modifier.padding(50.dp))
             }
+            println(chatState.chatList.toString())
+
         }
     }
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,7 +94,6 @@ fun SearchBarCard(chatViewModel: ChatViewModel, chatState: ChatState, onClick: (
             modifier = Modifier.padding(20.dp),
             color = Color.White
         )
-
         Box {
             // Search bar field with trailing icon button
             TextField(
@@ -123,6 +115,7 @@ fun SearchBarCard(chatViewModel: ChatViewModel, chatState: ChatState, onClick: (
                 },
                 singleLine = false,
                 trailingIcon = {
+
                     if (chatViewModel.isLoading.value) {
                         CircularProgressIndicator(
                             modifier = Modifier
@@ -137,6 +130,7 @@ fun SearchBarCard(chatViewModel: ChatViewModel, chatState: ChatState, onClick: (
                             onClick()
                         }) {
                             // Icon you want to display
+
                             Icon(
                                 imageVector = Icons.Filled.Send,
                                 contentDescription = "send_button",
@@ -149,54 +143,31 @@ fun SearchBarCard(chatViewModel: ChatViewModel, chatState: ChatState, onClick: (
         }
     }
 }
-
-@Composable
-fun SubmitButton(chatViewModel: ChatViewModel, chatState: ChatState, onClick: () -> Unit) {
-    Button(
-        onClick = {
-            onClick() },
-        shape = RoundedCornerShape(20.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 20.dp, end = 20.dp),
-        colors = ButtonDefaults.buttonColors(Color(0xFF04132D),Color.White),
-        content = {
-            Row {
-                Text(text = "Submit", color = Color.White)
-                Icon(
-                    imageVector = Icons.Filled.KeyboardArrowRight,
-                    contentDescription = "rightArrow",
-                    tint = Color.White
-                )
-            }
-        }
-    )
-}
-@SuppressLint("SuspiciousIndentation")
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ProfileWithMenu() {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-
-    CenterAlignedTopAppBar(
-        title = {
-        },
-        navigationIcon = {
-            IconButton(onClick = { /* do something */ }) {
-                Icon(
-                    imageVector = Icons.Filled.Menu,
-                    contentDescription = "menu"
-                )
-            }
-        },
-        actions = {
-            IconButton(onClick = { /* do something */ }) {
-                Icon(
-                    imageVector = Icons.Filled.Person,
-                    contentDescription = "profile"
-                )
-            }
-        },
-        scrollBehavior = scrollBehavior,
-    )
-}
+//@SuppressLint("SuspiciousIndentation")
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun ProfileWithMenu() {
+//    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+//
+//    CenterAlignedTopAppBar(
+//        title = {
+//        },
+//        navigationIcon = {
+//            IconButton(onClick = { /* do something */ }) {
+//                Icon(
+//                    imageVector = Icons.Filled.Menu,
+//                    contentDescription = "menu"
+//                )
+//            }
+//        },
+//        actions = {
+//            IconButton(onClick = { /* do something */ }) {
+//                Icon(
+//                    imageVector = Icons.Filled.Person,
+//                    contentDescription = "profile"
+//                )
+//            }
+//        },
+//        scrollBehavior = scrollBehavior,
+//    )
+//}
