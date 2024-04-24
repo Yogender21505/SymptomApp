@@ -2,9 +2,12 @@ package com.aanchal.symptomapp.screens
 
 import android.annotation.SuppressLint
 import android.content.Context
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,6 +22,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,14 +33,22 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.aanchal.symptomapp.MainViewModel
+import com.aanchal.symptomapp.R
+import com.aanchal.symptomapp.appointmentdata.AppointmentDataViewModel
 import com.aanchal.symptomapp.geminidatamanager.ChatState
 import com.aanchal.symptomapp.geminidatamanager.ChatUIEvent
 import com.aanchal.symptomapp.geminidatamanager.ChatViewModel
@@ -46,8 +58,6 @@ import kotlinx.coroutines.delay
 @Composable
 fun SearchScreen(
     navController: NavHostController,
-    applicationContext: Context,
-    viewModelmain: MainViewModel,
     chatState: ChatState,
     chatViewModel: ChatViewModel,
     userViewModel: UserViewModel
@@ -55,19 +65,34 @@ fun SearchScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        Column(modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally) {
-//            ProfileWithMenu()
-            Column(modifier = Modifier.weight(1f)) { // Allow this column to take up remaining space
-                Text(text = "Hello,",modifier = Modifier.padding(6.dp),fontSize = 15.sp)
-                Text(text = "${userViewModel.userName.value}",fontSize = 25.sp,modifier = Modifier.padding(10.dp),style = LocalTextStyle.current, fontWeight = FontWeight.ExtraBold)
-
+            Image(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(.8f),
+                painter = painterResource(id = R.drawable.topsheet),
+                contentDescription = "upperImage",
+                alignment = Alignment.TopCenter
+            )
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center) {
+//          //
+            Column(modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.Start) {
+                Spacer(modifier = Modifier.padding(30.dp))// Allow this column to take up remaining space
+                Text(text = "Hello,",modifier = Modifier,fontSize = 20.sp,color = Color.White)
+                Text(text = "${userViewModel.userName.value}",fontSize = 25.sp,modifier = Modifier.padding(vertical = 6.dp),style = LocalTextStyle.current, fontWeight = FontWeight.ExtraBold, color = Color.White)
+            }
+            Column(modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.Start) {
                 SearchBarCard(chatViewModel,chatState){
 
                         navController.navigate("doctorList")
                 }
-                Spacer(modifier = Modifier.padding(50.dp))
             }
+            Spacer(modifier = Modifier.padding(50.dp))
             println(chatState.chatList.toString())
 
         }
@@ -79,13 +104,13 @@ fun SearchScreen(
 fun SearchBarCard(chatViewModel: ChatViewModel, chatState: ChatState, onClick: () -> Unit) {
 
 
-    Card(
+    ElevatedCard(
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF00B9E4),
+            containerColor = Color(0xFF013E5e),
         ),
+        elevation= CardDefaults.cardElevation(100.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 80.dp, start = 20.dp, end = 20.dp)
     ) {
         Text(
             text = "Elaborate Symptoms To Get Specialist of Disease",
@@ -104,7 +129,7 @@ fun SearchBarCard(chatViewModel: ChatViewModel, chatState: ChatState, onClick: (
                 colors = TextFieldDefaults.textFieldColors(
                     cursorColor = Color.Black,
                     disabledLabelColor = Color.Transparent,
-                    containerColor = Color(0xff009ABE),
+                    containerColor = Color(0xFFFFFFFF),
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                 ),
@@ -134,7 +159,7 @@ fun SearchBarCard(chatViewModel: ChatViewModel, chatState: ChatState, onClick: (
                             Icon(
                                 imageVector = Icons.Filled.Send,
                                 contentDescription = "send_button",
-                                tint = Color.White
+                                tint = Color(0xFF08007C)
                             )
                         }
                     }
@@ -143,31 +168,15 @@ fun SearchBarCard(chatViewModel: ChatViewModel, chatState: ChatState, onClick: (
         }
     }
 }
-//@SuppressLint("SuspiciousIndentation")
-//@OptIn(ExperimentalMaterial3Api::class)
+
+//@Preview(showBackground = true)
 //@Composable
-//fun ProfileWithMenu() {
-//    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+//fun greet() {
+//    val navController = rememberNavController()
 //
-//    CenterAlignedTopAppBar(
-//        title = {
-//        },
-//        navigationIcon = {
-//            IconButton(onClick = { /* do something */ }) {
-//                Icon(
-//                    imageVector = Icons.Filled.Menu,
-//                    contentDescription = "menu"
-//                )
-//            }
-//        },
-//        actions = {
-//            IconButton(onClick = { /* do something */ }) {
-//                Icon(
-//                    imageVector = Icons.Filled.Person,
-//                    contentDescription = "profile"
-//                )
-//            }
-//        },
-//        scrollBehavior = scrollBehavior,
-//    )
+//    val chatViewModel =viewModel<ChatViewModel>()
+//    val userViewModel =viewModel<UserViewModel>()
+//    val chatState = chatViewModel.chatState.collectAsState().value
+//
+//    SearchScreen(navController,chatState,chatViewModel,userViewModel)
 //}

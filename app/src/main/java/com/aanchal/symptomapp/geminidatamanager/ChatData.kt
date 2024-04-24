@@ -35,7 +35,9 @@ object ChatData {
             )
         } catch (e: ResponseStoppedException) {
             // Handle ResponseStoppedException separately if needed
+            _isLoading.value=false
             return Chat(
+
                 prompt = "Response stopped: ${e.message}",
                 isFromUser = false
             )

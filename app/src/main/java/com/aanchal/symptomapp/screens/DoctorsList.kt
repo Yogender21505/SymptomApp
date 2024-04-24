@@ -3,6 +3,7 @@ package com.aanchal.symptomapp.screens
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -46,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -66,12 +69,29 @@ fun DoctorListScreen(
     chatState: ChatState,
     chatViewModel: ChatViewModel
 ) {
+    var context = LocalContext.current
     Box(modifier = Modifier.fillMaxSize()) {
         if (chatViewModel.isLoading.value == false) {
             // Get the categories from the response message
             val categories = chatViewModel.responseMessage.value.split(", ")
-            if (categories.isNotEmpty()) {
-                println(categories[0])
+
+            // Convert medicalSpecialties to a Set for efficient lookup
+            val medicalSpecialtiesSet = viewModelmain.medicalSpecialties.toSet()
+
+            // Check if all categories are present in medicalSpecialties
+            val missingCategories = categories.filter { category ->
+                category !in medicalSpecialtiesSet
+            }
+
+            if (missingCategories.isEmpty() && categories!=null) {
+                Image(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(.8f),
+                    painter = painterResource(id = R.drawable.topsheet),
+                    contentDescription = "upperImage",
+                    alignment = Alignment.TopCenter
+                )
                 val selectedCategory = remember { mutableStateOf(categories.getOrElse(0) { "" }) }
                 Column(modifier = Modifier.fillMaxSize()) {
                     DoctorNav(navController)
@@ -86,6 +106,7 @@ fun DoctorListScreen(
                                 text = "Specialist",
                                 fontWeight = FontWeight.ExtraBold,
                                 fontSize = 15.sp,
+                                color = Color.White,
                                 modifier = Modifier.padding(start = 16.dp)
                             )
                             Spacer(modifier = Modifier.padding(6.dp))
@@ -107,14 +128,15 @@ fun DoctorListScreen(
 
                     // Display the list of doctors for the selected category
                     val filteredDoctors = viewModelmain.filteredDoctors
-                    Column(modifier = Modifier.fillMaxSize()) {
+                    Column(modifier = Modifier.fillMaxSize().padding(top=10.dp)) {
                         Text(
                             text = "Top Rated Doctors",
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 15.sp,
+                            color = Color.White,
                             modifier = Modifier.padding(start = 16.dp)
                         )
-                        Spacer(modifier = Modifier.padding(6.dp))
+                        Spacer(modifier = Modifier.padding(15.dp))
                         // DoctorNav(navController) // Consider uncommenting if you have navigation
                         LazyColumn(modifier = Modifier.fillMaxSize()) {
                             items(filteredDoctors.value) { doctor ->
@@ -125,6 +147,8 @@ fun DoctorListScreen(
                 }
             } else {
                 navController.popBackStack()
+                navController.navigate("searchScreen")
+                Toast.makeText(context, "Symptoms not Tracked", Toast.LENGTH_SHORT).show()
             }
         } else {
             Box(
@@ -177,8 +201,8 @@ fun CategoryItem(
             .clickable(onClick = onItemClick),
         border = BorderStroke(1.dp, if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface),
         colors = CardDefaults.cardColors(
-            containerColor = if (selected) Color(0xFF00B9E4).copy(alpha = 0.5f) else MaterialTheme.colorScheme.surface,
-            contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+            containerColor = if (selected) Color(0xFF00B9E4).copy(alpha = 1f) else MaterialTheme.colorScheme.surface,
+            contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurface
         )
     ) {
         Row(horizontalArrangement = Arrangement.Center,
@@ -257,12 +281,17 @@ fun DoctorNav(navController: NavHostController) {
                 Icon(
                     imageVector = Icons.Filled.ArrowBack,
                     contentDescription = "menu"
+                    ,tint = Color.White
                 )
             }
         },
         actions = {
         },
         scrollBehavior = scrollBehavior,
+        modifier = Modifier.padding(top = 15.dp),
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Transparent,
+        ),
     )
 }
 

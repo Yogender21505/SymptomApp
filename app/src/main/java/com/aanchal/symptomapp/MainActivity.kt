@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.aanchal.symptomapp.ui.theme.SymptomAppTheme
@@ -25,12 +26,17 @@ import com.aanchal.symptomapp.screens.SuccessfullScreen
 import com.aanchal.symptomapp.userdata.UserViewModel
 
 class MainActivity  : ComponentActivity() {
+    private lateinit var connectivityObserver: ConnectivityObserver
    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+       connectivityObserver = NetworkConnectivityObserver(applicationContext)
        val doctors = DataManager.loadDoctorsFromJson(this)
        installSplashScreen()
         setContent {
             SymptomAppTheme {
+                val status by connectivityObserver.observe().collectAsState(
+                    initial = ConnectivityObserver.Status.Unavailable
+                )
                 val navController = rememberNavController()
                 val viewModelmain:MainViewModel = viewModel()
                 val chatViewModel =viewModel<ChatViewModel>()
@@ -40,6 +46,9 @@ class MainActivity  : ComponentActivity() {
                 Box(modifier = Modifier.background(color = MaterialTheme.colorScheme.background)) {
 
                     NavHost(navController, startDestination="onBoarding"){
+                        if(status==ConnectivityObserver.Status.Lost){
+                            navController.navigate("retry")
+                        }
                             composable("onBoarding"){
                                 OnBoardingScreen(navController,viewModelmain)
                             }
@@ -47,7 +56,7 @@ class MainActivity  : ComponentActivity() {
                                 LoginScreen(userViewModel,navController)
                             }
                             composable("searchScreen"){
-                                SearchScreen(navController,applicationContext,viewModelmain,chatState,chatViewModel,userViewModel)
+                                SearchScreen(navController,chatState,chatViewModel,userViewModel)
                             }
                             composable("doctorList"){
                                 DoctorListScreen(navController,applicationContext,viewModelmain,doctors,chatState,chatViewModel)
@@ -56,11 +65,16 @@ class MainActivity  : ComponentActivity() {
                                     backStackEntry ->
                                 val doctorId = backStackEntry.arguments?.getString("doctorId")?.toIntOrNull() ?: -1
                                 val doctor = doctors.find { it.doctorId == doctorId } ?: Doctor(0, "", "", 0.0, "", 0, "", "", "", "", "")
-                                AppointmentScreen(navController,applicationContext,viewModelmain,doctor,appointmentDataViewModel)
+                                AppointmentScreen(navController,applicationContext,viewModelmain,doctor,appointmentDataViewModel,userViewModel)
                             }
                             composable("successfullPage") {
                                 SuccessfullScreen(navController,viewModelmain,appointmentDataViewModel)
                             }
+                            composable("retry"){
+                                chatViewModel.isLoading.value=false
+                                RetryScreen(navController)
+                            }
+
                     }
                 }
             }

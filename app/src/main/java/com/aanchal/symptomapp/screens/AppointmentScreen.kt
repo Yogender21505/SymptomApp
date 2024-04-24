@@ -2,10 +2,11 @@ package com.aanchal.symptomapp.screens
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,28 +20,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeFloatingActionButton
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,7 +46,6 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -57,6 +53,7 @@ import com.aanchal.symptomapp.Doctor
 import com.aanchal.symptomapp.MainViewModel
 import com.aanchal.symptomapp.R
 import com.aanchal.symptomapp.appointmentdata.AppointmentDataViewModel
+import com.aanchal.symptomapp.userdata.UserViewModel
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -70,7 +67,8 @@ fun AppointmentScreen(
     applicationContext: Context,
     viewModelmain: MainViewModel,
     doctor: Doctor,
-    appointmentDataViewModel: AppointmentDataViewModel
+    appointmentDataViewModel: AppointmentDataViewModel,
+    userViewModel: UserViewModel
 ) {
     val selectedDate = appointmentDataViewModel.doctdate.value
     val context = LocalContext.current
@@ -88,7 +86,7 @@ fun AppointmentScreen(
 
         // Content Column
         Column(modifier = Modifier.fillMaxSize()) {
-            CenterAlignedTopAppBarExample(navController)
+            CenterAlignedTopAppBarExample(navController,context,userViewModel,doctor)
             profileDetails(doctor)
             LazyColumn(modifier = Modifier.weight(1f)) {
                 item { AboutCard(doctor) }
@@ -173,10 +171,11 @@ fun validateAndNavigate(
 fun DatePickerWithDateSelectableDatesSample(appointmentDataViewModel: AppointmentDataViewModel) {
     val datePickerState = rememberDatePickerState()
 
-    Card(
+    ElevatedCard(
         colors = CardDefaults.cardColors(
-            containerColor = androidx.compose.material.MaterialTheme.colors.surface,
+            containerColor = Color(0xFFF4FDFF),
         ),
+        elevation = CardDefaults.cardElevation(60.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 40.dp, end = 20.dp, start = 20.dp)
@@ -199,10 +198,12 @@ class Tools {
 
 @Composable
 fun AboutCard(doctor: Doctor) {
-    Card(
+    ElevatedCard(
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFFF4FDFF),
-        ),
+        )
+        ,
+        elevation = CardDefaults.cardElevation(60.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(20.dp)
@@ -223,7 +224,7 @@ fun AboutCard(doctor: Doctor) {
 @Composable
 fun profileDetails(doctor: Doctor) {
     Row(modifier = Modifier
-        .padding(20.dp)
+        .padding(25.dp)
         .fillMaxWidth()) {
         DocImageCard()
         Spacer(modifier = Modifier.padding(6.dp))
@@ -268,18 +269,23 @@ fun DocImageCard() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CenterAlignedTopAppBarExample(navController: NavHostController) {
-
+fun CenterAlignedTopAppBarExample(
+    navController: NavHostController,
+    context: Context,
+    userViewModel: UserViewModel,
+    doctor: Doctor
+) {
     CenterAlignedTopAppBar(
         modifier = Modifier.padding(top = 20.dp),
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.Transparent,
         ),
         title = {
+            // Add title if needed
         },
         navigationIcon = {
-            androidx.compose.material.IconButton(onClick = { navController.popBackStack() }) {
-                androidx.compose.material.Icon(
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(
                     imageVector = Icons.Filled.ArrowBack,
                     contentDescription = "backbutton",
                     tint = Color.White
@@ -287,10 +293,26 @@ fun CenterAlignedTopAppBarExample(navController: NavHostController) {
             }
         },
         actions = {
-            androidx.compose.material.IconButton(onClick = { /* do something */ }) {
-                androidx.compose.material.Icon(
+            IconButton(onClick = {
+                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                    data = Uri.parse("mailto:")
+                    putExtra(Intent.EXTRA_EMAIL, arrayOf(doctor.email))
+                    putExtra(Intent.EXTRA_SUBJECT, "Subject")
+                    putExtra(Intent.EXTRA_TEXT, "Message")
+                }
+                if (intent.resolveActivity(context.packageManager) != null) {
+                    context.startActivity(intent)
+                } else {
+                    Toast.makeText(
+                        context,
+                        "No email app found",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }) {
+                Icon(
                     imageVector = Icons.Filled.Email,
-                    contentDescription = "Calling",
+                    contentDescription = "email",
                     tint = Color.White
                 )
             }

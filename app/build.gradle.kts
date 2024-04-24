@@ -89,4 +89,5 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0")
     //Generative dependency
     implementation("com.google.ai.client.generativeai:generativeai:0.1.2")
+    implementation("androidx.core:core-splashscreen:1.0.1")
 }
